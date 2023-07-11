@@ -1,3 +1,4 @@
 {%- for prefix in ipv6_bogons %}
 set policy-options prefix-list pl-bogons-ipv6 {{ prefix }}
 {%- endfor %}
+
