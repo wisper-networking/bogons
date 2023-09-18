@@ -1,0 +1,18 @@
+/tool fetch url="https://team-cymru.org/Services/Bogons/fullbogons-ipv4.txt" dst-path=bogons.txt
+:local addressListName "bogon_addresses"
+:log info "Starting Bogon Update Script"
+:local bogon_list [/file get bogons.txt contents]
+
+/ip firewall address-list
+:foreach line in=$bogon_list do={
+    :if ( $line ~ "^#.*"=true) do={
+        :log info "Skipping comments"
+    } else={
+        :log info "else block"
+    }
+}
+
+
+/file remove bogons.txt
+
+:log info "Bogon Update Script Finish

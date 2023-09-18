@@ -1,0 +1,38 @@
+{
+    :global content;
+    :local url;
+    :local addressListName;
+    :set addressListName "auto_bogons"
+    :set url "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt"
+    
+    # fetch bogons
+    :local result [/tool fetch url=$url as-value output=user];
+    
+
+    # add data from fetch to the content dictionary
+    :if ($result->"status" = "finished") do={
+        :set content ($result->"data");
+    }
+
+    # add addresses to the firewall address list
+    :global contentLen [ :len $content ];
+    :global lineEnd 0;
+    :global line "";
+    :global lastEnd -1;
+    
+    # remove existing address list to make way for the updated list
+    /ip firewall address-list remove [find list=$addressListName];
+    
+    # iterates through each address in the bogons list, filtering out lines begininng with "#"
+    :do {
+        :set lineEnd [:find $content "\n" $lastEnd ];
+        :set line [:pick $content $lastEnd $lineEnd];
+        :set lastEnd ( $lineEnd + 1 );
+        :if ( [:pick $line 0] = "#" ) do={
+        } else={
+            /ip firewall address-list add address=$line list=$addressListName;
+        }
+        
+    } while=($lineEnd < $contentLen - 2)
+    :log info "IPv4 bogons updated"
+}
